@@ -41,13 +41,13 @@ func TestContextSetParam(t *testing.T) {
 
 func TestContextInit(t *testing.T) {
 	c := NewContext(nil, nil)
-	assert.Nil(t, c.Response)
-	assert.Nil(t, c.Request)
+	assert.Nil(t, c.Response())
+	assert.Nil(t, c.Request())
 	assert.Equal(t, 0, len(c.handlers))
 	req, _ := http.NewRequest("GET", "/users/", nil)
 	c.init(httptest.NewRecorder(), req)
-	assert.NotNil(t, c.Response)
-	assert.NotNil(t, c.Request)
+	assert.NotNil(t, c.Response())
+	assert.NotNil(t, c.Request())
 	assert.Equal(t, -1, c.index)
 	assert.Nil(t, c.data)
 }
@@ -136,16 +136,16 @@ func testNewContext(handlers ...Handler) (*Context, *httptest.ResponseRecorder) 
 
 func testNextHandler(tag string) Handler {
 	return func(c *Context) error {
-		fmt.Fprintf(c.Response, "<%v>", tag)
+		fmt.Fprintf(c.response, "<%v>", tag)
 		err := c.Next()
-		fmt.Fprintf(c.Response, "</%v>", tag)
+		fmt.Fprintf(c.response, "</%v>", tag)
 		return err
 	}
 }
 
 func testAbortHandler(tag string) Handler {
 	return func(c *Context) error {
-		fmt.Fprintf(c.Response, "<%v/>", tag)
+		fmt.Fprintf(c.response, "<%v/>", tag)
 		c.Abort()
 		return nil
 	}
@@ -153,14 +153,14 @@ func testAbortHandler(tag string) Handler {
 
 func testErrorHandler(tag string) Handler {
 	return func(c *Context) error {
-		fmt.Fprintf(c.Response, "<%v/>", tag)
+		fmt.Fprintf(c.response, "<%v/>", tag)
 		return errors.New("error:" + tag)
 	}
 }
 
 func testNormalHandler(tag string) Handler {
 	return func(c *Context) error {
-		fmt.Fprintf(c.Response, "<%v/>", tag)
+		fmt.Fprintf(c.response, "<%v/>", tag)
 		return nil
 	}
 }

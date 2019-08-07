@@ -61,24 +61,24 @@ func Handler(opts Options) routing.Handler {
 	opts.init()
 
 	return func(c *routing.Context) (err error) {
-		origin := c.Request.Header.Get(headerOrigin)
+		origin := c.Request().Header.Get(headerOrigin)
 		if origin == "" {
 			// the request is outside the scope of CORS
 			return
 		}
-		if c.Request.Method == "OPTIONS" {
+		if c.Request().Method == "OPTIONS" {
 			// a preflight request
-			method := c.Request.Header.Get(headerRequestMethod)
+			method := c.Request().Header.Get(headerRequestMethod)
 			if method == "" {
 				// the request is outside the scope of CORS
 				return
 			}
-			headers := c.Request.Header.Get(headerRequestHeaders)
-			opts.setPreflightHeaders(origin, method, headers, c.Response.Header())
+			headers := c.Request().Header.Get(headerRequestHeaders)
+			opts.setPreflightHeaders(origin, method, headers, c.Response().Header())
 			c.Abort()
 			return
 		}
-		opts.setActualHeaders(origin, c.Response.Header())
+		opts.setActualHeaders(origin, c.Response().Header())
 		return
 	}
 }

@@ -126,9 +126,9 @@ func (r *Router) Find(method, path string) (handlers []Handler, params map[strin
 // handleError is the error handler for handling any unhandled errors.
 func (r *Router) handleError(c *Context, err error) {
 	if httpError, ok := err.(HTTPError); ok {
-		http.Error(c.Response, httpError.Error(), httpError.StatusCode())
+		http.Error(c.response, httpError.Error(), httpError.StatusCode())
 	} else {
-		http.Error(c.Response, err.Error(), http.StatusInternalServerError)
+		http.Error(c.response, err.Error(), http.StatusInternalServerError)
 	}
 }
 
@@ -196,7 +196,7 @@ func NotFoundHandler(*Context) error {
 // In this case, the handler will respond with an Allow HTTP header listing the allowed HTTP methods.
 // Otherwise, the handler will do nothing and let the next handler (usually a NotFoundHandler) to handle the problem.
 func MethodNotAllowedHandler(c *Context) error {
-	methods := c.Router().findAllowedMethods(c.Request.URL.Path)
+	methods := c.Router().findAllowedMethods(c.request.URL.Path)
 	if len(methods) == 0 {
 		return nil
 	}
@@ -208,9 +208,9 @@ func MethodNotAllowedHandler(c *Context) error {
 		i++
 	}
 	sort.Strings(ms)
-	c.Response.Header().Set("Allow", strings.Join(ms, ", "))
-	if c.Request.Method != "OPTIONS" {
-		c.Response.WriteHeader(http.StatusMethodNotAllowed)
+	c.response.Header().Set("Allow", strings.Join(ms, ", "))
+	if c.request.Method != "OPTIONS" {
+		c.response.WriteHeader(http.StatusMethodNotAllowed)
 	}
 	c.Abort()
 	return nil
@@ -219,7 +219,7 @@ func MethodNotAllowedHandler(c *Context) error {
 // HTTPHandlerFunc adapts a http.HandlerFunc into a routing.Handler.
 func HTTPHandlerFunc(h http.HandlerFunc) Handler {
 	return func(c *Context) error {
-		h(c.Response, c.Request)
+		h(c.response, c.request)
 		return nil
 	}
 }
@@ -227,7 +227,7 @@ func HTTPHandlerFunc(h http.HandlerFunc) Handler {
 // HTTPHandler adapts a http.Handler into a routing.Handler.
 func HTTPHandler(h http.Handler) Handler {
 	return func(c *Context) error {
-		h.ServeHTTP(c.Response, c.Request)
+		h.ServeHTTP(c.response, c.request)
 		return nil
 	}
 }

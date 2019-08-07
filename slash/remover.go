@@ -31,11 +31,11 @@ import (
 // If you do not want redirection, please set `Router.IgnoreTrailingSlash` to be true without using Remover.
 func Remover(status int) routing.Handler {
 	return func(c *routing.Context) error {
-		if c.Request.URL.Path != "/" && strings.HasSuffix(c.Request.URL.Path, "/") {
-			if c.Request.Method != "GET" {
+		if c.Request().URL.Path != "/" && strings.HasSuffix(c.Request().URL.Path, "/") {
+			if c.Request().Method != "GET" {
 				status = http.StatusTemporaryRedirect
 			}
-			http.Redirect(c.Response, c.Request, strings.TrimRight(c.Request.URL.Path, "/"), status)
+			http.Redirect(c.Response(), c.Request(), strings.TrimRight(c.Request().URL.Path, "/"), status)
 			c.Abort()
 		}
 		return nil

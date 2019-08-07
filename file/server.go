@@ -80,10 +80,10 @@ func Server(pathMap PathMap, opts ...ServerOptions) routing.Handler {
 	dir := http.Dir(options.RootPath)
 
 	return func(c *routing.Context) error {
-		if c.Request.Method != "GET" && c.Request.Method != "HEAD" {
+		if c.Request().Method != "GET" && c.Request().Method != "HEAD" {
 			return routing.NewHTTPError(http.StatusMethodNotAllowed)
 		}
-		path, found := matchPath(c.Request.URL.Path, from, to)
+		path, found := matchPath(c.Request().URL.Path, from, to)
 		if !found || options.Allow != nil && !options.Allow(c, path) {
 			return routing.NewHTTPError(http.StatusNotFound)
 		}
@@ -113,8 +113,8 @@ func Server(pathMap PathMap, opts ...ServerOptions) routing.Handler {
 			return serveFile(c, dir, filepath.Join(path, options.IndexFile))
 		}
 
-		c.Response.Header().Del("Content-Type")
-		http.ServeContent(c.Response, c.Request, path, fstat.ModTime(), file)
+		c.Response().Header().Del("Content-Type")
+		http.ServeContent(c.Response(), c.Request(), path, fstat.ModTime(), file)
 		return nil
 	}
 }
@@ -131,8 +131,8 @@ func serveFile(c *routing.Context, dir http.Dir, path string) error {
 	} else if fstat.IsDir() {
 		return routing.NewHTTPError(http.StatusNotFound)
 	}
-	c.Response.Header().Del("Content-Type")
-	http.ServeContent(c.Response, c.Request, path, fstat.ModTime(), file)
+	c.Response().Header().Del("Content-Type")
+	http.ServeContent(c.Response(), c.Request(), path, fstat.ModTime(), file)
 	return nil
 }
 
@@ -145,7 +145,7 @@ func Content(path string) routing.Handler {
 		path = filepath.Join(RootPath, path)
 	}
 	return func(c *routing.Context) error {
-		if c.Request.Method != "GET" && c.Request.Method != "HEAD" {
+		if c.Request().Method != "GET" && c.Request().Method != "HEAD" {
 			return routing.NewHTTPError(http.StatusMethodNotAllowed)
 		}
 		file, err := os.Open(path)
@@ -159,8 +159,8 @@ func Content(path string) routing.Handler {
 		} else if fstat.IsDir() {
 			return routing.NewHTTPError(http.StatusNotFound)
 		}
-		c.Response.Header().Del("Content-Type")
-		http.ServeContent(c.Response, c.Request, path, fstat.ModTime(), file)
+		c.Response().Header().Del("Content-Type")
+		http.ServeContent(c.Response(), c.Request(), path, fstat.ModTime(), file)
 		return nil
 	}
 }

@@ -10,8 +10,8 @@ import (
 
 // Context represents the contextual data and environment while processing an incoming HTTP request.
 type Context struct {
-	Request  *http.Request       // the current request
-	Response http.ResponseWriter // the response writer
+	request  *http.Request       // the current request
+	response http.ResponseWriter // the response writer
 	router   *Router
 	pnames   []string               // list of route parameter names
 	pvalues  []string               // list of parameter values corresponding to pnames
@@ -75,7 +75,7 @@ func (c *Context) Set(name string, value interface{}) {
 // Query returns the first value for the named component of the URL query parameters.
 // If key is not present, it returns the specified default value or an empty string.
 func (c *Context) Query(name string, defaultValue ...string) string {
-	if vs, _ := c.Request.URL.Query()[name]; len(vs) > 0 {
+	if vs, _ := c.request.URL.Query()[name]; len(vs) > 0 {
 		return vs[0]
 	}
 	if len(defaultValue) > 0 {
@@ -89,7 +89,7 @@ func (c *Context) Query(name string, defaultValue ...string) string {
 // The form takes precedence over the latter.
 // If key is not present, it returns the specified default value or an empty string.
 func (c *Context) Form(key string, defaultValue ...string) string {
-	r := c.Request
+	r := c.request
 	r.ParseMultipartForm(32 << 20)
 	if vs := r.Form[key]; len(vs) > 0 {
 		return vs[0]
@@ -104,7 +104,7 @@ func (c *Context) Form(key string, defaultValue ...string) string {
 // PostForm returns the first value for the named component from POST and PUT body parameters.
 // If key is not present, it returns the specified default value or an empty string.
 func (c *Context) PostForm(key string, defaultValue ...string) string {
-	r := c.Request
+	r := c.request
 	r.ParseMultipartForm(32 << 20)
 	if vs := r.PostForm[key]; len(vs) > 0 {
 		return vs[0]
@@ -155,40 +155,56 @@ func (c *Context) URL(route string, pairs ...interface{}) string {
 // If there is no match or if the request is a GET request, it will use DefaultFormDataReader
 // to read the request data.
 func (c *Context) Read(data interface{}) error {
-	if c.Request.Method != "GET" {
-		t := getContentType(c.Request)
+	if c.request.Method != "GET" {
+		t := getContentType(c.request)
 		if reader, ok := DataReaders[t]; ok {
-			return reader.Read(c.Request, data)
+			return reader.Read(c.request, data)
 		}
 	}
 
-	return DefaultFormDataReader.Read(c.Request, data)
+	return DefaultFormDataReader.Read(c.request, data)
 }
 
 // Write writes the given data of arbitrary type to the response.
 // The method calls the data writer set via SetDataWriter() to do the actual writing.
 // By default, the DefaultDataWriter will be used.
 func (c *Context) Write(data interface{}) error {
-	return c.writer.Write(c.Response, data)
+	return c.writer.Write(c.response, data)
 }
 
 // WriteWithStatus sends the HTTP status code and writes the given data of arbitrary type to the response.
 // See Write() for details on how data is written to response.
 func (c *Context) WriteWithStatus(data interface{}, statusCode int) error {
-	c.Response.WriteHeader(statusCode)
+	c.Response().WriteHeader(statusCode)
 	return c.Write(data)
 }
 
 // SetDataWriter sets the data writer that will be used by Write().
 func (c *Context) SetDataWriter(writer DataWriter) {
 	c.writer = writer
-	writer.SetHeader(c.Response)
+	writer.SetHeader(c.response)
 }
+
+// Request returns the *http.Request associated to the Context
+func (c *Context) Request() *http.Request {
+	return c.request
+}
+
+// Response returns the http.ResponseWriter associated to the Context
+func (c *Context) Response() http.ResponseWriter {
+	return c.response
+}
+
+// SetResponse sets the http.ResponseWriter associated to the Context
+func (c *Context) SetResponse(w http.ResponseWriter) {
+	c.response = w
+}
+
 
 // init sets the request and response of the context and resets all other properties.
 func (c *Context) init(response http.ResponseWriter, request *http.Request) {
-	c.Response = response
-	c.Request = request
+	c.response = response
+	c.request = request
 	c.data = nil
 	c.index = -1
 	c.writer = DefaultDataWriter

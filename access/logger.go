@@ -47,9 +47,9 @@ func CustomLogger(loggerFunc LogWriterFunc) routing.Handler {
 	return func(c *routing.Context) error {
 		startTime := time.Now()
 
-		req := c.Request
-		rw := &LogResponseWriter{c.Response, http.StatusOK, 0}
-		c.Response = rw
+		req := c.Request()
+		rw := &LogResponseWriter{c.Response(), http.StatusOK, 0}
+		c.SetResponse(rw)
 
 		err := c.Next()
 

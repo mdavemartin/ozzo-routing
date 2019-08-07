@@ -12,7 +12,7 @@ import (
 func TestRouterNotFound(t *testing.T) {
 	r := New()
 	h := func(c *Context) error {
-		fmt.Fprint(c.Response, "ok")
+		fmt.Fprint(c.response, "ok")
 		return nil
 	}
 	r.Get("/users", h)
@@ -104,12 +104,12 @@ func TestRouterNormalizeRequestPath(t *testing.T) {
 func TestRouterHandleError(t *testing.T) {
 	r := New()
 	res := httptest.NewRecorder()
-	c := &Context{Response: res}
+	c := &Context{response: res}
 	r.handleError(c, errors.New("abc"))
 	assert.Equal(t, http.StatusInternalServerError, res.Code)
 
 	res = httptest.NewRecorder()
-	c = &Context{Response: res}
+	c = &Context{response: res}
 	r.handleError(c, NewHTTPError(http.StatusNotFound))
 	assert.Equal(t, http.StatusNotFound, res.Code)
 }

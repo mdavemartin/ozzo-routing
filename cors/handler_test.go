@@ -11,7 +11,7 @@ import (
 
 	"time"
 
-	"github.com/go-ozzo/ozzo-routing/v2"
+	"github.com/mdavemartin/ozzo-routing/v2"
 	"github.com/stretchr/testify/assert"
 )
 
